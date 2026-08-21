@@ -1,0 +1,27 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Izpako zip, ja tāds augšupielādēts
+        run: |
+          ZIPFILE=$(find . -maxdepth 1 -iname "*.zip" | head -n 1)
+          if [ -n "$ZIPFILE" ]; then
+            TMPDIR=$(mktemp -d)
+            unzip -o "$ZIPFILE" -d "$TMPDIR"
+            INNER=$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -n "$INNER" ] && [ "$(find "$TMPDIR" -mindepth 1 -maxdepth 1 | wc -l)" -eq 1 ]; then
+              cp -rf "$INNER"/. .
+            else
+              cp -rf "$TMPDIR"/. .
+            fi
+            rm -rf "$TMPDIR"
+            rm -f "$ZIPFILE"
